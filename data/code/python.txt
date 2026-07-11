@@ -1,0 +1,36 @@
+def compile(strings, black="X", white=".", xor="o"):
+    # first check for consistent lengths
+    size = len(strings[0]), len(strings)
+    if size[0] % 8 or size[1] % 8:
+        raise ValueError(f"cursor string sizes must be divisible by 8 {size}")
+
+    for s in strings[1:]:
+        if len(s) != size[0]:
+            raise ValueError("Cursor strings are inconsistent lengths")
+
+    # create the data arrays.
+    # this could stand a little optimizing
+    maskdata = []
+    filldata = []
+    maskitem = fillitem = 0
+    step = 8
+    for s in strings:
+        for c in s:
+            maskitem = maskitem << 1
+            fillitem = fillitem << 1
+            step = step - 1
+            if c == black:
+                maskitem = maskitem | 1
+                fillitem = fillitem | 1
+            elif c == white:
+                maskitem = maskitem | 1
+            elif c == xor:
+                fillitem = fillitem | 1
+
+            if not step:
+                maskdata.append(maskitem)
+                filldata.append(fillitem)
+                maskitem = fillitem = 0
+                step = 8
+
+    return tuple(filldata), tuple(maskdata)
