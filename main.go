@@ -7,10 +7,12 @@ import (
 	"unicode"
 
 	codesection "idle-token/code-section"
+	"idle-token/ui"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/term"
+	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 var (
@@ -37,6 +39,7 @@ type PlayerInfo struct {
 	cursorPos   int
 	RawCode     string
 	CurrentCode codesection.CodeLib
+	Button      ui.Button
 }
 
 func initialModel() PlayerInfo {
@@ -56,6 +59,8 @@ func initialModel() PlayerInfo {
 		rawCode[i] = ch
 		colorChars[i] = 'g'
 	}
+
+	// calc box to get x and y
 
 	return PlayerInfo{
 		tokens:    10,
@@ -91,6 +96,14 @@ func (p PlayerInfo) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		p.width = msg.Width
 		p.height = msg.Height
 		return p, nil
+	case tea.MouseReleaseMsg:
+		if msg.Button != tea.MouseLeft {
+			return p, nil
+		}
+
+		if zone.Get("menu").InBounds(msg) {
+
+		}
 	case tea.KeyPressMsg:
 		key := msg.String()
 		if key == "ctrl+c" || key == "ctrl+x" {
@@ -149,25 +162,20 @@ func (p PlayerInfo) View() tea.View {
 		s += rendered
 
 	}
-
 	// Main View setup
 	main := border.Render(s)
 
 	rightTop := border.
-		Width(14).
+		Width(28).
 		Height(6).
-		MarginLeft(2).
-		Render("Placeholder")
+		Render("Open Menu")
 
 	rightBottom := border.
 		Width(28).
-		MarginLeft(2).
+		Height(p.height - lipgloss.Height(rightTop) - 11).
 		Render("Another\nplaceholder")
-	rightBottom = border.
-		Height(p.height - lipgloss.Height(rightBottom)).
-		Render("Another\nPlaceholder")
 
-	rightCol := lipgloss.JoinVertical(lipgloss.Left, rightTop, rightBottom)
+	rightCol := lipgloss.JoinVertical(lipgloss.Left, zone.Mark("menu", rightTop), rightBottom)
 
 	layout := lipgloss.JoinHorizontal(lipgloss.Top, main, rightCol)
 
@@ -177,10 +185,19 @@ func (p PlayerInfo) View() tea.View {
 		Align(lipgloss.Center, lipgloss.Center).
 		Render(layout)
 
-	return tea.NewView(centeredLayout)
+	var view tea.View
+	// Ensure that alt-screen is enabled, as bubblezone will only work in alt-screen mode.
+	view.AltScreen = true
+	// Enable mouse motion tracking.
+	view.MouseMode = tea.MouseModeCellMotion
+	// Wrap view in [zone.Scan].
+	view.SetContent(zone.Scan(centeredLayout))
+
+	return view
 }
 
 func main() {
+	zone.NewGlobal()
 
 	width, height, err := term.GetSize(os.Stdout.Fd())
 	if err != nil {

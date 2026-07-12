@@ -7,6 +7,7 @@ require charm.land/bubbletea/v2 v2.0.8
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
+	github.com/lrstanley/bubblezone/v2 v2.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 )
