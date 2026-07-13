@@ -156,7 +156,7 @@ func (r Renderer) View() tea.View {
 	rightTop := border.
 		BorderForeground(colorAccent).
 		Width(28).
-		Height(6).
+		Height(5).
 		Render("Open Menu")
 
 	rightBottom := border.
@@ -170,7 +170,7 @@ func (r Renderer) View() tea.View {
 	layout := lipgloss.NewStyle().
 		Border(lipgloss.DoubleBorder()).
 		BorderForeground(colorFg).
-		Padding(1, 2).
+		Padding(1, 3).
 		Render(lipgloss.JoinHorizontal(lipgloss.Center, main, rightCol))
 
 	centeredLayout := lipgloss.NewStyle().
