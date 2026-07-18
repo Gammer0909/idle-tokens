@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	charm.land/lipgloss/v2 v2.0.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect

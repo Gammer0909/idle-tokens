@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 )
 
@@ -38,18 +38,21 @@ type Renderer struct {
 	width     int
 	height    int
 	cursorPos int
-	Button    Button
+	Button    *Button
 	Player    model.PlayerInfo
+	Menus     map[string]*Menu
 }
 
 func NewRenderer(codeString string, rawCode []rune, colorChars []rune) Renderer {
 	player := model.NewPlayer(codeString, rawCode, colorChars)
-	button := NewButton("Open Menu")
+	button := NewButton("shop menu") // button and menu labels should be the same
+	menu := NewMenu("shop menu", nil)
 
 	return Renderer{
 		cursorPos: 0,
-		Button:    button,
+		Button:    &button,
 		Player:    player,
+		Menus:     map[string]*Menu{menu.MenuName: &menu},
 	}
 }
 
@@ -80,6 +83,12 @@ func (r Renderer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if zone.Get("menu").InBounds(msg) {
 			r.Button.Press()
+			for k, v := range r.Menus {
+				if k == r.Button.Label {
+					v.MenuOpen = true
+				}
+			}
+			r.Button.Release()
 		}
 	case tea.KeyPressMsg:
 		key := msg.String()
@@ -180,12 +189,34 @@ func (r Renderer) View() tea.View {
 		Align(lipgloss.Center, lipgloss.Center).
 		Render(layout)
 
+	rendered := ""
+	// any layers we need to check?
+	for _, m := range r.Menus {
+		if m.MenuOpen {
+			log.Printf("Menu {%s} is opened.", m.MenuName)
+			rendered = m.MenuView(r)
+			continue
+		}
+	}
+
+	if rendered != "" {
+		layers := []*lipgloss.Layer{lipgloss.NewLayer(centeredLayout).Z(1)}
+		layers = append(layers, lipgloss.NewLayer(rendered).Z(2))
+
+		comp := lipgloss.NewCompositor(layers...)
+		out := comp.Render()
+
+		var view tea.View
+		view.AltScreen = true
+		view.MouseMode = tea.MouseModeCellMotion
+		view.SetContent(zone.Scan(out))
+
+		return view
+	}
+
 	var view tea.View
-	// Ensure that alt-screen is enabled, as bubblezone will only work in alt-screen mode.
 	view.AltScreen = true
-	// Enable mouse motion tracking.
 	view.MouseMode = tea.MouseModeCellMotion
-	// Wrap view in [zone.Scan].
 	view.SetContent(zone.Scan(centeredLayout))
 
 	return view
